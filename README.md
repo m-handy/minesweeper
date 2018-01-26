@@ -1,0 +1,1 @@
+C# application for generate minesweeper field :)
