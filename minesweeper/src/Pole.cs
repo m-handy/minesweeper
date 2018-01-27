@@ -6,10 +6,11 @@ namespace minesweeper{
 
         private int row;
         private int column;
-        public Pole(int row, int column)
+        public Pole(int row, int column, bool hasMine = false)
         {
             this.row=row;
             this.column=column;
+            this.hasMine=hasMine;
         }
 
         public void setMine(){
