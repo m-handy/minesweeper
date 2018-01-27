@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 
 namespace minesweeper
@@ -7,153 +8,184 @@ namespace minesweeper
     {
         private int rows;
         private int columns;
-        private int mines;
-        private int size;
-        private Pole[,] playground;
+        private int minesCout;
+        private int playgroundSize;
+        private Dictionary<Point, Field> playground = new Dictionary<Point, Field>();
 
-        public Playground(int rows, int columns, int mines)
+        public Playground(int rows, int columns, int minesCount)
         {
+            playgroundSize = rows * columns;
+            if (minesCount > playgroundSize)
+            {
+                throw new ArgumentOutOfRangeException("mines", minesCount, "number of mines cannot be bigger than size of the field!");
+            }
+
             this.rows = rows;
             this.columns = columns;
-            this.size = rows * columns;
-            if (mines > size)
-            {
-                throw new ArgumentOutOfRangeException("mines", mines, "number of mines cannot be bigger than size of field!");
-            }
-            this.mines = mines;
-            var minesList = createMinesList();
-            createPlayground(minesList);
+            this.minesCout = minesCount;
+
+            LayMines();
+            FillRestPlayground();
         }
 
-        private void createPlayground(List<Tuple<int, int>> minesList)
+        public void Print()
         {
-            playground = new Pole[rows, columns];
-            for (int i = 0; i < playground.GetLength(0); i++)
+            Stopwatch watch = Stopwatch.StartNew();
+            for (int i = 0; i < rows; i++)
             {
-                for (int j = 0; j < playground.GetLength(1); j++)
+                for (int j = 0; j < columns; j++)
                 {
-                    if (minesList.Contains(Tuple.Create(i, j)))
-                    {
-                        playground[i, j] = new Mine(i, j);
-                    }
-                    else
-                    {
-                        playground[i, j] = new Pole(i, j);
-                    }
-                }
-            }
-
-
-            for (int i = 0; i < playground.GetLength(0); i++)
-            {
-                for (int j = 0; j < playground.GetLength(1); j++)
-                {
-                    if (playground[i, j].GetType() != typeof(Mine))
-                    {
-                        var value = 0;
-                        if (i > 0)
-                        {
-                            if (j > 0)
-                            {
-                                if (playground[i - 1, j - 1].GetType() == typeof(Mine))
-                                {
-                                    value++;
-                                }
-                            }
-                            if (playground[i - 1, j].GetType() == typeof(Mine))
-                            {
-                                value++;
-                            }
-                            if (j < columns - 1)
-                            {
-                                if (playground[i - 1, j + 1].GetType() == typeof(Mine))
-                                {
-                                    value++;
-                                }
-                            }
-                        }
-                        if (j > 0)
-                        {
-                            if (playground[i, j - 1].GetType() == typeof(Mine))
-                            {
-                                value++;
-                            }
-                        }
-                        if (j < columns - 1)
-                        {
-                            if (playground[i, j + 1].GetType() == typeof(Mine))
-                            {
-                                value++;
-                            }
-                        }
-
-                        if (i < rows - 1)
-                        {
-                            if (j > 0)
-                            {
-                                if (playground[i + 1, j - 1].GetType() == typeof(Mine))
-                                {
-                                    value++;
-                                }
-                            }
-                            if (playground[i + 1, j].GetType() == typeof(Mine))
-                            {
-                                value++;
-                            }
-                            if (j < columns - 1)
-                            {
-                                if (playground[i + 1, j + 1].GetType() == typeof(Mine))
-                                {
-                                    value++;
-                                }
-                            }
-                        }
-
-                        playground[i, j].SetValue(value);
-                    }
-                }
-            }
-        }
-
-        private List<Tuple<int, int>> createMinesList()
-        {
-            Random rnd = new Random();
-            var minesList = new List<int>();
-            var minesPositionList = new List<Tuple<int, int>>();
-
-            for (int i = 0; i < mines; i++)
-            {
-                int xx = rnd.Next(0, size); // creates a number between 0 and size
-                while (minesList.Contains(xx))
-                {
-                    xx = rnd.Next(0, size); // creates a number between 0 and size
-                }
-                minesList.Add(xx);
-                ;
-                minesPositionList.Add(Tuple.Create(xx / columns, xx % columns));
-            }
-
-
-            return minesPositionList;
-        }
-
-
-        public void Print(){
-            for (int i = 0; i < playground.GetLength(0); i++)
-            {
-                for (int j = 0; j < playground.GetLength(1); j++)
-                {
-                    if (playground[i, j].GetType() == typeof(Mine))
-                    {
-                        Console.Write(" X ");
-                    }
-                    else
-                    {
-                        Console.Write(" " + playground[i, j].GetValue() + " ");
-                    }
+                    var point = new Point(i, j);
+                    Console.Write(playground[point].Print());
                 }
                 Console.Write(Environment.NewLine);
             }
+            watch.Stop();
+            Console.WriteLine("Print: {0}ms", watch.ElapsedMilliseconds);
         }
+
+        private bool IsMine(Point point)
+        {
+            return playground.ContainsKey(point) && playground[point] is Mine;
+        }
+
+        private int GetValue(Point point)
+        {
+            return GetValue(point.X, point.Y);
+        }
+        private int GetValue(int i, int j)
+        {
+            var value = 0;
+            if (i > 0)
+            {
+                if (j > 0)
+                {
+                    if (IsMine(new Point(i - 1, j - 1)))
+                    {
+                        value++;
+                    }
+                }
+                if (IsMine(new Point(i - 1, j)))
+                {
+                    value++;
+                }
+                if (j < columns - 1)
+                {
+                    if (IsMine(new Point(i - 1, j + 1)))
+                    {
+                        value++;
+                    }
+                }
+            }
+
+            if (j > 0)
+            {
+                if (IsMine(new Point(i, j - 1)))
+                {
+                    value++;
+                }
+            }
+            if (j < columns - 1)
+            {
+                if (IsMine(new Point(i, j + 1)))
+                {
+                    value++;
+                }
+            }
+
+            if (i < rows - 1)
+            {
+                if (j > 0)
+                {
+                    if (IsMine(new Point(i + 1, j - 1)))
+                    {
+                        value++;
+                    }
+                }
+                if (IsMine(new Point(i + 1, j)))
+                {
+                    value++;
+                }
+                if (j < columns - 1)
+                {
+                    if (IsMine(new Point(i + 1, j + 1)))
+                    {
+                        value++;
+                    }
+                }
+            }
+            return value;
+        }
+
+        private void FillRestPlayground()
+        {
+            Stopwatch watch = Stopwatch.StartNew();
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < columns; j++)
+                {
+                    CreateField(new Point(i, j));
+                }
+            }
+            watch.Stop();
+            Console.WriteLine("FillRestPlayground: {0}ms", watch.ElapsedMilliseconds);
+        }
+
+        private void CreateField(Point point)
+        {
+            if (!playground.ContainsKey(point))
+            {
+                var pole = new Field(point, GetValue(point));
+                playground.Add(pole.Point, pole);
+            }
+        }
+
+        private void LayMinesBackup()
+        {
+            Stopwatch watch = Stopwatch.StartNew();
+            var rnd = new Random();
+            var minesList = new List<int>();
+            int minePosition;
+
+            for (int i = 0; i < minesCout; i++)
+            {
+                do
+                {
+                    minePosition = rnd.Next(0, playgroundSize);
+                } while (minesList.Contains(minePosition));
+                minesList.Add(minePosition);
+
+                var mine = new Mine(GetCoordinates(minePosition));
+                playground.Add(mine.Point, mine);
+            }
+            watch.Stop();
+            Console.WriteLine("LayMines: {0}ms", watch.ElapsedMilliseconds);
+        }
+        private void LayMines()
+        {
+            Stopwatch watch = Stopwatch.StartNew();
+            var rnd = new Random();
+            Point minePosition;
+
+            for (int i = 0; i < minesCout; i++)
+            {
+                do
+                {
+                    minePosition = GetCoordinates(rnd.Next(0, playgroundSize));
+                } while (playground.ContainsKey(minePosition));
+
+                var mine = new Mine(minePosition);
+                playground.Add(mine.Point, mine);
+            }
+            watch.Stop();
+            Console.WriteLine("LayMines: {0}ms", watch.ElapsedMilliseconds);
+        }
+
+        private Point GetCoordinates(int minePosition)
+        {
+            return new Point(minePosition / columns, minePosition % columns);
+        }
+
+
     }
 }
