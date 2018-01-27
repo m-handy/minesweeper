@@ -13,10 +13,9 @@ namespace minesweeper
         private int columns;
         private int minesCout;
         private int playgroundSize;
-        private ConcurrentDictionary<Point, Mine> onlyMines = new ConcurrentDictionary<Point, Mine>();
-        private ConcurrentDictionary<Point, FieldWithValue> minesNeighbors = new ConcurrentDictionary<Point, FieldWithValue>();
-
-        public ConcurrentDictionary<Point, Mine> OnlyMines { get => onlyMines; }
+        private ConcurrentDictionary<Point, Mine> mines = new ConcurrentDictionary<Point, Mine>();
+        private ConcurrentDictionary<Point, Clue> minesNeighbors = new ConcurrentDictionary<Point, Clue>();
+        public ConcurrentDictionary<Point, Mine> Mines { get => mines; }
 
         public Playground(int rows, int columns, int minesCount)
         {
@@ -40,14 +39,13 @@ namespace minesweeper
             this.rows = rows;
             this.columns = columns;
             this.minesCout = minesCount;
-            Console.WriteLine("S T A R T");
+
             LayMines();
             GetValuesOfNeighbors();
         }
 
         public void Print()
         {
-            Stopwatch watch = Stopwatch.StartNew();
             for (int i = 0; i < rows; i++)
             {
                 for (int j = 0; j < columns; j++)
@@ -58,7 +56,7 @@ namespace minesweeper
                     if (IsMine(point))
                     {
                         Console.ForegroundColor = ConsoleColor.Black;
-                        Console.Write(onlyMines[point].Output);
+                        Console.Write(mines[point].Output);
                     }
                     else if (IsNeighbor(point))
                     {
@@ -93,13 +91,11 @@ namespace minesweeper
                 Console.ResetColor();
                 Console.Write(Environment.NewLine);
             }
-            watch.Stop();
-            Console.WriteLine("Print: {0}ms", watch.ElapsedMilliseconds);
         }
 
         private bool IsMine(Point point)
         {
-            return onlyMines.ContainsKey(point);
+            return mines.ContainsKey(point);
         }
 
         private bool IsNeighbor(Point point)
@@ -109,7 +105,7 @@ namespace minesweeper
 
         private int GetValue(Point point)
         {
-            var neighbours = GetNeighboursList(point, true);
+            var neighbours = GetNeighborsList(point, true);
             var value = 0;
             foreach (var field in neighbours)
             {
@@ -150,12 +146,12 @@ namespace minesweeper
                 do
                 {
                     minePosition = GetCoordinates(rnd.Next(0, playgroundSize));
-                } while (onlyMines.ContainsKey(minePosition));
+                } while (mines.ContainsKey(minePosition));
 
                 var mine = new Mine(minePosition);
-                onlyMines.TryAdd(mine.Point, mine);
+                mines.TryAdd(mine.Point, mine);
                 minesNeighbors.TryRemove(mine.Point, out _);
-                AddNeigbors(mine.Point);
+                AddNeighbors(mine.Point);
             }
 
             watch.Stop();
@@ -167,19 +163,19 @@ namespace minesweeper
             return new Point(minePosition / columns, minePosition % columns);
         }
 
-        private void AddNeigbors(Point point)
+        private void AddNeighbors(Point point)
         {
-            foreach (var neighborPoint in GetNeighboursList(point, false))
+            foreach (var neighborPoint in GetNeighborsList(point, false))
             {
-                minesNeighbors.TryAdd(neighborPoint, new FieldWithValue(neighborPoint, -1));
+                minesNeighbors.TryAdd(neighborPoint, new Clue(neighborPoint, -1));
             }
         }
 
-        private List<Point> GetNeighboursList(Point point, bool isMine)
+        private List<Point> GetNeighborsList(Point point, bool isMine)
         {
-            return GetNeighboursList(point.X, point.Y, isMine);
+            return GetNeighborsList(point.X, point.Y, isMine);
         }
-        private List<Point> GetNeighboursList(int i, int j, bool isMine)
+        private List<Point> GetNeighborsList(int i, int j, bool isMine)
         {
             var neighbors = new List<Point>();
             Point tmp;

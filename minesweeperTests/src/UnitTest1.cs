@@ -12,7 +12,7 @@ namespace minesweeper.Tests
         {
             var minesCount = 10;
             var field = new Playground(10, 10, minesCount);
-            Assert.AreEqual(minesCount, field.OnlyMines.Count);
+            Assert.AreEqual(minesCount, field.Mines.Count);
         }
 
         [TestMethod]

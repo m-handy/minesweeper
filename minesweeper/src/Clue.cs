@@ -2,7 +2,7 @@ using System;
 
 namespace minesweeper
 {
-    public class FieldWithValue : EmptyField
+    public class Clue : EmptyField
     {
         private int value;
         private Point point;
@@ -11,7 +11,7 @@ namespace minesweeper
 
         public override string Output { get => value.ToString(); }
 
-        public FieldWithValue(Point point, int value) : base(point)
+        public Clue(Point point, int value) : base(point)
         {
             this.point = point;
             this.value = value;
