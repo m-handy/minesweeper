@@ -30,18 +30,18 @@ namespace minesweeper
             }
             if (columns < 1)
             {
-                throw new ArgumentOutOfRangeException("columns",columns, "number of columns cannot be less than one!");
+                throw new ArgumentOutOfRangeException("columns", columns, "number of columns cannot be less than one!");
             }
             if (minesCount < 1)
             {
-                throw new ArgumentOutOfRangeException("mines",columns, "number of mines cannot be less than one!");
+                throw new ArgumentOutOfRangeException("mines", columns, "number of mines cannot be less than one!");
             }
             this.rows = rows;
             this.columns = columns;
             this.minesCout = minesCount;
 
             LayMines();
-            GetValuesOfNeighbors();
+            //GetValuesOfNeighbors();
         }
 
         public void Print()
@@ -151,7 +151,7 @@ namespace minesweeper
                 var mine = new Mine(minePosition);
                 mines.TryAdd(mine.Point, mine);
                 minesNeighbors.TryRemove(mine.Point, out _);
-                AddNeighbors(mine.Point);
+                AddOrUpdateNeighbors(mine.Point);
             }
 
             watch.Stop();
@@ -163,11 +163,15 @@ namespace minesweeper
             return new Point(minePosition / columns, minePosition % columns);
         }
 
-        private void AddNeighbors(Point point)
+        private void AddOrUpdateNeighbors(Point point)
         {
             foreach (var neighborPoint in GetNeighborsList(point, false))
             {
-                minesNeighbors.TryAdd(neighborPoint, new Clue(neighborPoint, -1));
+                minesNeighbors.AddOrUpdate(neighborPoint, new Clue(neighborPoint, 1), (key, oldClue) =>
+                {
+                    oldClue.Value++;
+                    return oldClue;
+                });
             }
         }
 

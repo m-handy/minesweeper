@@ -14,7 +14,5 @@ namespace minesweeper
             this.point = point;
         }
 
-
-
     }
 }
