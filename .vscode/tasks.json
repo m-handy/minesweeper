@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/minesweeper.csproj"
+                "${workspaceFolder}/minesweeper/minesweeper.csproj"
             ],
             "problemMatcher": "$msCompile"
         },
@@ -17,6 +17,18 @@
             "type": "process",
             "args": [
                 "run",
+                "--project",
+                "${workspaceFolder}/minesweeper/minesweeper.csproj"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "test",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "test",
+                "${workspaceFolder}/minesweeperTests/minesweeperTests.csproj"
             ],
             "problemMatcher": "$msCompile"
         }
