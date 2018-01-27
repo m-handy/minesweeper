@@ -2,20 +2,24 @@ using System;
 
 namespace minesweeper{
     public class Pole{
-        private bool hasMine = false;
-
         private int row;
         private int column;
-        public Pole(int row, int column, bool hasMine = false)
+
+        private int value;
+        public Pole(int row, int column)
         {
             this.row=row;
             this.column=column;
-            this.hasMine=hasMine;
         }
 
-        public void setMine(){
-            this.hasMine=true;
-            Console.WriteLine("[{0},{1}]minaaaaaaa!!!!!!", row,column);
+        internal void SetValue(int value)
+        {
+            this.value = value;
+        }
+
+        internal int GetValue()
+        {
+            return value;
         }
     }
 }
