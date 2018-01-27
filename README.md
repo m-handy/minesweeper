@@ -1,1 +1,1 @@
-simple C# hello world
+C# application for generate minesweeper field :)

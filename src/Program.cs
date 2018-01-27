@@ -6,8 +6,9 @@ namespace minesweeper
     {
         static void Main(string[] args)
         {
-            var xxx = "sfksfjk";
-            Console.WriteLine(xxx);
+            var field = new Field(3,5,30);
+            Console.WriteLine(field.getName());  
+       
         }
     }
 }
