@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,10 +13,10 @@ namespace minesweeper
         private int columns;
         private int minesCout;
         private int playgroundSize;
-        private Dictionary<Point, Field> playground = new Dictionary<Point, Field>();
-        private Dictionary<Point, Field> onlyMines = new Dictionary<Point, Field>();
-        
+        private ConcurrentDictionary<Point, Mine> onlyMines = new ConcurrentDictionary<Point, Mine>();
+        private ConcurrentDictionary<Point, FieldWithValue> minesNeighbors = new ConcurrentDictionary<Point, FieldWithValue>();
 
+        public int OnlyMinesCount { get => onlyMines.Count;}
 
         public Playground(int rows, int columns, int minesCount)
         {
@@ -28,17 +29,9 @@ namespace minesweeper
             this.rows = rows;
             this.columns = columns;
             this.minesCout = minesCount;
-
+            Console.WriteLine("S T A R T");
             LayMines();
-            FillRestPlayground();
-            Stopwatch watch = Stopwatch.StartNew();
-            foreach (var xxx in onlyMines)
-            {
-                playground.Add(xxx.Key, xxx.Value);
-            }
-            //Parallel.ForEach(onlyMines, (xxx) => { playground.Add(xxx.Key, xxx.Value); });
-            watch.Stop();
-            Console.WriteLine("Merge Dict: {0}ms", watch.ElapsedMilliseconds);
+            GetValuesOfNeighbors();
         }
 
         public void Print()
@@ -49,8 +42,44 @@ namespace minesweeper
                 for (int j = 0; j < columns; j++)
                 {
                     var point = new Point(i, j);
-                    Console.Write(playground[point].Print());
+                    Console.BackgroundColor = ConsoleColor.Gray;
+
+                    if (IsMine(point))
+                    {
+                        Console.ForegroundColor = ConsoleColor.Black;
+                        Console.Write(onlyMines[point].Output);
+                    }
+                    else if (IsNeighbor(point))
+                    {
+                        switch (minesNeighbors[point].Value)
+                        {
+                            case 1:
+                                Console.ForegroundColor = ConsoleColor.Blue;
+                                break;
+                            case 2:
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                break;
+                            case 3:
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                break;
+                            case 4:
+                                Console.ForegroundColor = ConsoleColor.DarkBlue;
+                                break;
+                            case 5:
+                                Console.ForegroundColor = ConsoleColor.DarkRed;
+                                break;
+                            default:
+                                Console.ForegroundColor = ConsoleColor.Magenta;
+                                break;
+                        }
+                        Console.Write(minesNeighbors[point].Output);
+                    }
+                    else
+                    {
+                        Console.Write(" ");
+                    }
                 }
+                Console.ResetColor();
                 Console.Write(Environment.NewLine);
             }
             watch.Stop();
@@ -59,121 +88,46 @@ namespace minesweeper
 
         private bool IsMine(Point point)
         {
-            return onlyMines.ContainsKey(point);// && playground[point] is Mine;
+            return onlyMines.ContainsKey(point);
+        }
+
+        private bool IsNeighbor(Point point)
+        {
+            return minesNeighbors.ContainsKey(point);
         }
 
         private int GetValue(Point point)
         {
-            return GetValue(point.X, point.Y);
-        }
-        private int GetValue(int i, int j)
-        {
+            var neighbours = GetNeighboursList(point, true);
             var value = 0;
-            if (i > 0)
+            foreach (var field in neighbours)
             {
-                if (j > 0)
-                {
-                    if (IsMine(new Point(i - 1, j - 1)))
-                    {
-                        value++;
-                    }
-                }
-                if (IsMine(new Point(i - 1, j)))
+                if (IsMine(field))
                 {
                     value++;
-                }
-                if (j < columns - 1)
-                {
-                    if (IsMine(new Point(i - 1, j + 1)))
-                    {
-                        value++;
-                    }
-                }
-            }
-
-            if (j > 0)
-            {
-                if (IsMine(new Point(i, j - 1)))
-                {
-                    value++;
-                }
-            }
-            if (j < columns - 1)
-            {
-                if (IsMine(new Point(i, j + 1)))
-                {
-                    value++;
-                }
-            }
-
-            if (i < rows - 1)
-            {
-                if (j > 0)
-                {
-                    if (IsMine(new Point(i + 1, j - 1)))
-                    {
-                        value++;
-                    }
-                }
-                if (IsMine(new Point(i + 1, j)))
-                {
-                    value++;
-                }
-                if (j < columns - 1)
-                {
-                    if (IsMine(new Point(i + 1, j + 1)))
-                    {
-                        value++;
-                    }
                 }
             }
             return value;
         }
 
-        private void FillRestPlayground()
+        private void GetValuesOfNeighbors()
         {
             Stopwatch watch = Stopwatch.StartNew();
-            for (int i = 0; i < rows; i++)
-            {
-                for (int j = 0; j < columns; j++)
+            Parallel.For(0, rows, i =>
                 {
-                    CreateField(new Point(i, j));
-                }
-            }
+                    for (int j = 0; j < columns; j++)
+                    {
+                        var point = new Point(i, j);
+                        if (!IsMine(point) && IsNeighbor(point))
+                        {
+                            minesNeighbors[point].Value = GetValue(point);
+                        }
+                    }
+                });
             watch.Stop();
-            Console.WriteLine("FillRestPlayground: {0}ms", watch.ElapsedMilliseconds);
+            Console.WriteLine("GetValuesOfNeighbors: {0}ms", watch.ElapsedMilliseconds);
         }
 
-        private void CreateField(Point point)
-        {
-            if (!onlyMines.ContainsKey(point))
-            {
-                var pole = new Field(point, GetValue(point));
-                playground.Add(pole.Point, pole);
-            }
-        }
-
-        private void LayMinesBackup()
-        {
-            Stopwatch watch = Stopwatch.StartNew();
-            var rnd = new Random();
-            var minesList = new List<int>();
-            int minePosition;
-
-            for (int i = 0; i < minesCout; i++)
-            {
-                do
-                {
-                    minePosition = rnd.Next(0, playgroundSize);
-                } while (minesList.Contains(minePosition));
-                minesList.Add(minePosition);
-
-                var mine = new Mine(GetCoordinates(minePosition));
-                playground.Add(mine.Point, mine);
-            }
-            watch.Stop();
-            Console.WriteLine("LayMines: {0}ms", watch.ElapsedMilliseconds);
-        }
         private void LayMines()
         {
             Stopwatch watch = Stopwatch.StartNew();
@@ -188,8 +142,11 @@ namespace minesweeper
                 } while (onlyMines.ContainsKey(minePosition));
 
                 var mine = new Mine(minePosition);
-                onlyMines.Add(mine.Point, mine);
+                onlyMines.TryAdd(mine.Point, mine);
+                minesNeighbors.TryRemove(mine.Point, out _);
+                AddNeigbors(mine.Point);
             }
+
             watch.Stop();
             Console.WriteLine("LayMines: {0}ms", watch.ElapsedMilliseconds);
         }
@@ -199,6 +156,83 @@ namespace minesweeper
             return new Point(minePosition / columns, minePosition % columns);
         }
 
+        private void AddNeigbors(Point point)
+        {
+            foreach (var neighborPoint in GetNeighboursList(point, false))
+            {
+                minesNeighbors.TryAdd(neighborPoint, new FieldWithValue(neighborPoint, -1));
+            }
+        }
 
+        private List<Point> GetNeighboursList(Point point, bool isMine)
+        {
+            return GetNeighboursList(point.X, point.Y, isMine);
+        }
+        private List<Point> GetNeighboursList(int i, int j, bool isMine)
+        {
+            var neighbors = new List<Point>();
+            Point tmp;
+
+            if (i > 0)
+            {
+                if (j > 0)
+                {
+                    if (isMine == IsMine(tmp = new Point(i - 1, j - 1)))
+                    {
+                        neighbors.Add(tmp);
+                    }
+                }
+                if (isMine == IsMine(tmp = new Point(i - 1, j)))
+                {
+                    neighbors.Add(tmp);
+                }
+                if (j < columns - 1)
+                {
+                    if (isMine == IsMine(tmp = new Point(i - 1, j + 1)))
+                    {
+                        neighbors.Add(tmp);
+                    }
+                }
+            }
+
+            if (j > 0)
+            {
+                if (isMine == IsMine(tmp = new Point(i, j - 1)))
+                {
+                    neighbors.Add(tmp);
+                }
+            }
+            if (j < columns - 1)
+            {
+                if (isMine == IsMine(tmp = new Point(i, j + 1)))
+                {
+                    neighbors.Add(tmp);
+                }
+            }
+
+            if (i < rows - 1)
+            {
+                if (j > 0)
+                {
+                    if (isMine == IsMine(tmp = new Point(i + 1, j - 1)))
+                    {
+                        neighbors.Add(tmp);
+                    }
+                }
+                if (isMine == IsMine(tmp = new Point(i + 1, j)))
+                {
+                    neighbors.Add(tmp);
+                }
+                if (j < columns - 1)
+                {
+                    if (isMine == IsMine(tmp = new Point(i + 1, j + 1)))
+                    {
+                        neighbors.Add(tmp);
+                    }
+                }
+            }
+
+            return neighbors;
+        }
     }
 }

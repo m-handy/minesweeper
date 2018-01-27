@@ -2,14 +2,12 @@ using System;
 
 namespace minesweeper
 {
-    public class Mine : Field
+    public class Mine : EmptyField
     {
-        public Mine(Point point): base(point, -1)
-        {
-        }
+        
+        public override string Output { get => "X"; }
 
-        internal override string Print(){
-            return "X";
-        }
+        public Mine(Point point) : base(point) {}
+
     }
 }

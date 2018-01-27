@@ -3,13 +3,18 @@ namespace minesweeper
     public struct Point
     {
 
-        public Point(int v1, int v2)
+        public Point(int x, int y)
         {
-            this.X = v1;
-            this.Y = v2;
+            this.X = x;
+            this.Y = y;
         }
 
         public int X { get; }
         public int Y { get; }
+
+        public override string ToString()
+        {
+            return "[" + X + "," + Y +"]";
+        }
     }
 }
