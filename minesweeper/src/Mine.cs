@@ -2,7 +2,7 @@ using System;
 
 namespace minesweeper
 {
-    public class Mine : EmptyField
+    public class Mine : Empty
     {
         
         public override string Output { get => "X"; }

@@ -2,7 +2,7 @@ using System;
 
 namespace minesweeper
 {
-    public class Clue : EmptyField
+    public class Clue : Empty
     {
         private int value;
         private Point point;
