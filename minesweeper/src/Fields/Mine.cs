@@ -1,6 +1,6 @@
 using System;
 
-namespace minesweeper
+namespace Minesweeper.Fields
 {
     public class Mine : Empty
     {

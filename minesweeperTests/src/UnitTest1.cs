@@ -1,8 +1,8 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using minesweeper;
+using Minesweeper;
 
-namespace minesweeper.Tests
+namespace Minesweeper.Tests
 {
     [TestClass]
     public class UnitTest1
