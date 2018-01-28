@@ -1,8 +1,8 @@
 using System;
 
-namespace minesweeper
+namespace Minesweeper.Fields
 {
-    public class Mine : EmptyField
+    public class Mine : Empty
     {
         
         public override string Output { get => "X"; }

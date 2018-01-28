@@ -1,4 +1,4 @@
-namespace minesweeper
+namespace Minesweeper
 {
     public struct Point
     {
@@ -11,6 +11,16 @@ namespace minesweeper
 
         public int X { get; }
         public int Y { get; }
+
+        public bool IsMine(Field field)
+        {
+            return field.Mines.ContainsKey(this);
+        }
+
+        public bool IsNeighbor(Field field)
+        {
+            return field.MinesNeighbors.ContainsKey(this);
+        }
 
         public override string ToString()
         {

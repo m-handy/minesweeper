@@ -1,20 +1,18 @@
 using System;
 
-namespace minesweeper
+namespace Minesweeper.Fields
 {
-    public class EmptyField
+    public class Empty
     {
         private Point point;
         public Point Point { get => point; }
 
         public virtual string Output { get => " "; }
 
-        public EmptyField(Point point)
+        public Empty(Point point)
         {
             this.point = point;
         }
-
-
 
     }
 }

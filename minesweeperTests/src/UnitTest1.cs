@@ -1,8 +1,8 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using minesweeper;
+using Minesweeper;
 
-namespace minesweeper.Tests
+namespace Minesweeper.Tests
 {
     [TestClass]
     public class UnitTest1
@@ -11,7 +11,15 @@ namespace minesweeper.Tests
         public void MinesCount()
         {
             var minesCount = 10;
-            var field = new Playground(10, 10, minesCount);
+            var field = new Field(10, 10, minesCount);
+            Assert.AreEqual(minesCount, field.Mines.Count);
+        }
+
+        [TestMethod]
+        public void MinesCountBig()
+        {
+            var minesCount = 900;
+            var field = new Field(70, 90, minesCount);
             Assert.AreEqual(minesCount, field.Mines.Count);
         }
 
@@ -19,14 +27,14 @@ namespace minesweeper.Tests
         [ExpectedException(typeof(ArgumentOutOfRangeException))]
         public void PlaygroundSizeException()
         {
-            var field = new Playground(1, 1, 2);
+            var field = new Field(1, 1, 2);
         }
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentOutOfRangeException))]
         public void PlaygroundDimensionException()
         {
-            var field = new Playground(-1, -10, 2);
+            var field = new Field(-1, -10, 2);
         }
     }
 }

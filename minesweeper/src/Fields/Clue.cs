@@ -1,8 +1,8 @@
 using System;
 
-namespace minesweeper
+namespace Minesweeper.Fields
 {
-    public class Clue : EmptyField
+    public class Clue : Empty
     {
         private int value;
         private Point point;
